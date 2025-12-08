@@ -1,11 +1,12 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { createBrandWorkflow } from "../../../workflows/create-brand";
 import { z } from "zod";
-import { PostAdminCreateBrand } from "./validators";
+import { PostAdminCreateBrand, PutAdminUpdateBrand } from "./validators";
 import { BRAND_MODULE } from "../../../modules/brand";
 import BrandModuleService from "../../../modules/brand/service";
 
 type PostAdminCreateBrandType = z.infer<typeof PostAdminCreateBrand>;
+type PutAdminUpdateBrandType = z.infer<typeof PutAdminUpdateBrand>;
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const query = req.scope.resolve("query");

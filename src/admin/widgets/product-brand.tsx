@@ -1,6 +1,6 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk";
 import { DetailWidgetProps, AdminProduct } from "@medusajs/framework/types";
-import { clx, Container, Heading, Text, Button } from "@medusajs/ui";
+import { clx, Container, Heading, Text, Button, Select } from "@medusajs/ui";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sdk } from "../lib/sdk";
 import { toast } from "@medusajs/ui";
@@ -47,16 +47,16 @@ const ProductBrandWidget = ({
   });
 
   const currentBrand = (queryResult?.product as AdminProductBrand)?.brand;
-  const [selectedBrandId, setSelectedBrandId] = useState<string>(
-    currentBrand?.id || ""
+  const [selectedBrandId, setSelectedBrandId] = useState<string | undefined>(
+    currentBrand?.id
   );
-  const [savedBrandId, setSavedBrandId] = useState<string>(
-    currentBrand?.id || ""
+  const [savedBrandId, setSavedBrandId] = useState<string | undefined>(
+    currentBrand?.id
   );
 
   // Update selected brand and saved brand when product data loads
   useEffect(() => {
-    const brandId = currentBrand?.id || "";
+    const brandId = currentBrand?.id;
     setSelectedBrandId(brandId);
     setSavedBrandId(brandId);
   }, [currentBrand?.id]);
@@ -73,9 +73,8 @@ const ProductBrandWidget = ({
       try {
         // If there's an existing brand and we're changing to a different brand (or removing)
         if (existingBrandId && existingBrandId !== brandId) {
-          console.log("Dismissing existing brand:", existingBrandId);
           try {
-            const dismissResponse = await sdk.client.fetch(
+            await sdk.client.fetch(
               `/admin/products/${product.id}/dismiss/brand`,
               {
                 method: "POST",
@@ -84,7 +83,6 @@ const ProductBrandWidget = ({
                 },
               }
             );
-            console.log("Dismiss response:", dismissResponse);
             // Wait a bit to ensure dismiss is fully processed
             await new Promise((resolve) => setTimeout(resolve, 100));
           } catch (dismissError) {
@@ -95,7 +93,6 @@ const ProductBrandWidget = ({
 
         // If brandId is provided (setting a new brand), create the link
         if (brandId) {
-          console.log("Creating new brand link:", brandId);
           const createResponse = await sdk.client.fetch(
             `/admin/products/${product.id}/brand`,
             {
@@ -105,12 +102,10 @@ const ProductBrandWidget = ({
               },
             }
           );
-          console.log("Create response:", createResponse);
           return createResponse;
         }
       } catch (error: any) {
         console.error("Error in mutationFn:", error);
-        // Log more details about the error
         if (error?.response) {
           console.error("Error response:", await error.response?.json?.());
         }
@@ -118,7 +113,7 @@ const ProductBrandWidget = ({
       }
     },
     onSuccess: (_, { brandId }) => {
-      const savedId = brandId || "";
+      const savedId = brandId || undefined;
       setSavedBrandId(savedId);
       queryClient.invalidateQueries({ queryKey: [["product", product.id]] });
       queryClient.invalidateQueries({ queryKey: [["brands"]] });
@@ -136,11 +131,6 @@ const ProductBrandWidget = ({
     },
   });
 
-  const handleBrandChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const brandId = e.target.value || "";
-    setSelectedBrandId(brandId);
-  };
-
   const handleSave = () => {
     const brandId = selectedBrandId || "";
     const existingBrandId = savedBrandId || undefined;
@@ -148,11 +138,9 @@ const ProductBrandWidget = ({
   };
 
   const hasChanges = selectedBrandId !== savedBrandId;
-
   const brands = brandsData?.brands || [];
   const selectedBrand = brands.find((b) => b.id === selectedBrandId);
 
-  console.log(product)
   return (
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
@@ -165,18 +153,22 @@ const ProductBrandWidget = ({
           <Text size="small" weight="plus" className="mb-2 block">
             Select Brand
           </Text>
-          <select
+          <Select
             value={selectedBrandId}
-            onChange={handleBrandChange}
+            onValueChange={setSelectedBrandId}
             disabled={mutation.isPending || isLoadingBrands}
           >
-            <option value="">None</option>
-            {brands.map((brand) => (
-              <option key={brand.id} value={brand.id}>
-                {brand.name}
-              </option>
-            ))}
-          </select>
+            <Select.Trigger>
+              <Select.Value placeholder="Select a brand" />
+            </Select.Trigger>
+            <Select.Content>
+              {brands.map((item) => (
+                <Select.Item key={item.id} value={item.id}>
+                  {item.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
         </div>
         {selectedBrand && (
           <div
@@ -196,6 +188,7 @@ const ProductBrandWidget = ({
             </Text>
           </div>
         )}
+
         <div className="flex justify-end pt-2">
           <Button
             variant="primary"
@@ -203,7 +196,7 @@ const ProductBrandWidget = ({
             disabled={!hasChanges || mutation.isPending || isLoadingBrands}
             isLoading={mutation.isPending}
           >
-            {mutation.isPending ? "Saving..." : "Save"}
+            {mutation.isPending ? "Saving..." : "Save changes"}
           </Button>
         </div>
       </div>

@@ -2,7 +2,10 @@ import {
   defineMiddlewares,
   validateAndTransformBody,
 } from "@medusajs/framework/http";
-import { PostAdminCreateBrand } from "./admin/brands/validators";
+import {
+  PostAdminCreateBrand,
+  PutAdminUpdateBrand,
+} from "./admin/brands/validators";
 import { PostAdminSetProductBrand } from "./admin/products/[id]/brand/validators";
 import { z } from "zod";
 import { PostAdminDismissProductBrand } from "./admin/products/[id]/dismiss/brand/validators";
@@ -13,6 +16,11 @@ export default defineMiddlewares({
       matcher: "/admin/brands",
       method: "POST",
       middlewares: [validateAndTransformBody(PostAdminCreateBrand)],
+    },
+    {
+      matcher: "/admin/brands/:id",
+      method: "PUT",
+      middlewares: [validateAndTransformBody(PutAdminUpdateBrand)],
     },
     {
       matcher: "/admin/products/:id/brand",
