@@ -2,6 +2,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { Modules } from "@medusajs/framework/utils";
 import { BRAND_MODULE } from "../../../../../modules/brand";
+import BrandModuleService from "../../../../../modules/brand/service";
 
 type AdminSetProductBrandReq = {
   brand_id: string;
@@ -15,7 +16,8 @@ export const POST = async (
   const { brand_id } = req.validatedBody;
 
   const container = req.scope;
-  const brandModuleService = container.resolve(BRAND_MODULE);
+  const brandModuleService: BrandModuleService =
+    container.resolve(BRAND_MODULE);
   const link = container.resolve("link");
 
   // confirm brand exists (pattern เดียวกับ hook)
