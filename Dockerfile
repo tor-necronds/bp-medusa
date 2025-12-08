@@ -2,20 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install
+# Install dependencies first (better caching)
+COPY package*.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build both backend and admin frontend
+RUN yarn build
 
 # Expose port
 EXPOSE 9000
 
-# Start the application
-CMD ["npm", "run", "start"]
+# Start command
+CMD ["yarn", "start"]
