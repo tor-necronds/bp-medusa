@@ -5,9 +5,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json yarn.lock ./
 
-# ต้องติดตั้ง ALL dependencies (ไม่ใช้ --production)
-# เพราะ Medusa ต้องใช้ typescript และ dev deps
-RUN yarn install --frozen-lockfile
+# Install dependencies with retry and increased timeout
+RUN yarn install --frozen-lockfile \
+    --network-timeout 100000 \
+    || yarn install --frozen-lockfile --network-timeout 100000 \
+    || yarn install --frozen-lockfile --network-timeout 100000
 
 # Copy all files (รวม medusa-config.ts)
 COPY . .
